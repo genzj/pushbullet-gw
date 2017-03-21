@@ -6,6 +6,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/genzj/pushbullet-gw/pushbullet"
+	"github.com/go-resty/resty"
 	"github.com/urfave/cli"
 )
 
@@ -37,14 +38,40 @@ func createClient(c *cli.Context) error {
 	return nil
 }
 
+func setLogger(c *cli.Context) error {
+	debug := c.Bool("debug")
+	resty.SetDebug(debug)
+	if debug {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(log.InfoLevel)
+	}
+	return nil
+}
+
 func Run() error {
 	app := cli.NewApp()
 	app.Usage = "access Pushbullet APIs by commands and simple HTTP GET requests"
 	app.Version = "0.1.0"
 	app.Author = "genzj <zj0512@gmail.com>"
 	app.Commands = commands
-	app.Before = createClient
+	app.Before = func(c *cli.Context) error {
+		fs := [](func(c *cli.Context) error){
+			setLogger,
+			createClient,
+		}
+		for _, f := range fs {
+			if err := f(c); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name:  "debug",
+			Usage: "show more debug messages",
+		},
 		cli.StringFlag{
 			Name:  "client-id",
 			Usage: "Client ID of the OAuth application",
