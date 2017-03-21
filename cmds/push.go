@@ -12,7 +12,7 @@ func init() {
 		Aliases: []string{"p"},
 		Before:  requireToken,
 		Action: func(c *cli.Context) error {
-			if resp, err := client.GetUser(); err != nil {
+			if resp, err := client.PushNote("", "", ""); err != nil {
 				log.Error(err)
 			} else {
 				log.Info(resp)

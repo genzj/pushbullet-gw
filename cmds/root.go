@@ -1,6 +1,7 @@
 package cmds
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -50,6 +51,11 @@ func setLogger(c *cli.Context) error {
 		log.SetLevel(log.InfoLevel)
 	}
 	return nil
+}
+
+func prettyPrintStruct(v interface{}) {
+	s, _ := json.MarshalIndent(v, "", "  ")
+	fmt.Println(string(s))
 }
 
 func requireToken(c *cli.Context) error {
