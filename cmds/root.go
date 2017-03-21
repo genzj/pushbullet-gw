@@ -32,9 +32,12 @@ func createClient(c *cli.Context) error {
 
 	client = pushbullet.NewClient(clientID, clientSecret, redirectURI)
 
-	if code := c.String("code"); code != "" {
+	if token := c.String("token"); token != "" {
+		client.LoadToken(token)
+	} else if code := c.String("code"); code != "" {
 		client.Credential.Code = code
 	}
+
 	return nil
 }
 
@@ -88,6 +91,11 @@ func Run() error {
 			Name:  "redirect-uri",
 			Value: "http://127.0.0.1/code",
 			Usage: "URI to receive authentication code of OAuth",
+		},
+		cli.StringFlag{
+			Name:   "token",
+			Hidden: true,
+			Usage:  "OAuth access token for API access",
 		},
 	}
 	app.Run(os.Args)

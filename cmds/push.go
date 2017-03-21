@@ -11,15 +11,20 @@ func init() {
 		Usage:   "push to specified devices",
 		Aliases: []string{"p"},
 		Action: func(c *cli.Context) error {
-			if err := client.RefreshToken(); err != nil {
-				log.Error(
-					"Cannot get access token, error: ",
-					err,
-					"Try get code from url: ",
-					client.AuthURL(),
-				)
-				return err
+			if resp, err := client.Me(); err != nil {
+				log.Error(err)
+			} else {
+				log.Info(resp)
 			}
+			//if err := client.RefreshToken(); err != nil {
+			//log.Error(
+			//"Cannot get access token, error: ",
+			//err,
+			//"Try get code from url: ",
+			//client.AuthURL(),
+			//)
+			//return err
+			//}
 			return nil
 		},
 	})

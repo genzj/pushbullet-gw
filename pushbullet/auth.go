@@ -36,3 +36,11 @@ func (c *Client) RefreshToken() error {
 	}
 	return nil
 }
+
+func (c *Client) LoadToken(token string) {
+	c.token = token
+}
+
+func (c *Client) HasToken() bool {
+	return c.token != ""
+}
