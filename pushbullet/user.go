@@ -1,9 +1,5 @@
 package pushbullet
 
-import (
-	"encoding/json"
-)
-
 type (
 	User struct {
 		ID              string  `json:"iden"`
@@ -17,13 +13,7 @@ type (
 	}
 )
 
-func (c *Client) Me() (*User, error) {
-	u := &User{}
-	if resp, err := c.sendRequest("/v2/users/me", nil); err != nil {
-		return nil, err
-	} else if err := json.Unmarshal(resp.Body(), u); err != nil {
-		return nil, err
-	} else {
-		return u, nil
-	}
+func (c *Client) GetUser() (*User, error) {
+	resp, err := c.retrieve("/v2/users/me", nil, &User{})
+	return resp.(*User), err
 }

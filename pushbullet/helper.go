@@ -28,7 +28,7 @@ func (c *Client) AuthURL() *url.URL {
 	return u
 }
 
-func (c *Client) sendRequest(path string, body interface{}) (*resty.Response, error) {
+func (c *Client) sendRequest(path string, body interface{}, result interface{}) (*resty.Response, error) {
 	var resp *resty.Response
 	var err error
 
@@ -38,6 +38,10 @@ func (c *Client) sendRequest(path string, body interface{}) (*resty.Response, er
 	}
 
 	req := resty.R().SetHeader("Access-Token", c.token)
+
+	if result != nil {
+		req.SetResult(result)
+	}
 
 	if body == nil {
 		resp, err = req.Get(c.ActionURL(path).String())
@@ -54,5 +58,13 @@ func (c *Client) sendRequest(path string, body interface{}) (*resty.Response, er
 	} else {
 		log.Info(resp)
 		return resp, nil
+	}
+}
+
+func (c *Client) retrieve(path string, body interface{}, result interface{}) (interface{}, error) {
+	if resp, err := c.sendRequest(path, body, result); err != nil {
+		return result, err
+	} else {
+		return resp.Result(), nil
 	}
 }

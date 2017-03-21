@@ -12,6 +12,11 @@ type accessTokenRequest struct {
 	GrantType string `json:"grant_type"`
 }
 
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+}
+
 func (c *Client) RefreshToken() error {
 	if c.Credential.Code == "" {
 		log.Errorf("code is required to get token")
@@ -25,6 +30,7 @@ func (c *Client) RefreshToken() error {
 
 	if resp, err := resty.R().
 		SetBody(req).
+		SetResult(&tokenResponse{}).
 		Post(c.ActionURL("/oauth2/token").String()); err != nil {
 		log.Error(err)
 		return err
@@ -32,7 +38,8 @@ func (c *Client) RefreshToken() error {
 		log.Error(resp.String())
 		return fmt.Errorf(resp.String())
 	} else {
-		log.Info(resp)
+		log.Debug("token received: ", resp)
+		c.LoadToken(resp.Result().(*tokenResponse).AccessToken)
 	}
 	return nil
 }

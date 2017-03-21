@@ -52,6 +52,22 @@ func setLogger(c *cli.Context) error {
 	return nil
 }
 
+func requireToken(c *cli.Context) error {
+	if client.HasToken() {
+		return nil
+	} else if err := client.RefreshToken(); err != nil {
+		log.Error(
+			"Cannot get access token, error: ",
+			err,
+			"Try get code from url then retry: ",
+			client.AuthURL(),
+		)
+		return err
+	} else {
+		return nil
+	}
+}
+
 func Run() error {
 	app := cli.NewApp()
 	app.Usage = "access Pushbullet APIs by commands and simple HTTP GET requests"
