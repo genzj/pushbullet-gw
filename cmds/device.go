@@ -14,10 +14,11 @@ func init() {
 		Flags: []cli.Flag{
 			cli.BoolFlag{
 				Name:  "list",
-				Usage: "show all registered devices",
+				Usage: "show registered devices, output will be filtered by the DeviceID if specified",
 			},
 		},
-		Action: deviceAction,
+		ArgsUsage: "[DeviceID]",
+		Action:    deviceAction,
 	})
 }
 
@@ -26,6 +27,13 @@ func deviceAction(c *cli.Context) error {
 	if list {
 		if resp, err := client.ListDevices(); err != nil {
 			log.Error(err)
+		} else if c.Args().Present() {
+			deviceID := c.Args().First()
+			for _, device := range resp.Devices {
+				if device.ID == deviceID {
+					prettyPrintStruct(device)
+				}
+			}
 		} else {
 			prettyPrintStruct(resp)
 		}
