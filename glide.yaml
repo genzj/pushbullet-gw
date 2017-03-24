@@ -8,3 +8,6 @@ import:
   version: ^1.19.1
 - package: github.com/go-resty/resty
   version: ^0.11.0
+- package: golang.org/x/net
+- package: github.com/dgrijalva/jwt-go
+  version: ^3.0.0

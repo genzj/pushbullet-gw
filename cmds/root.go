@@ -111,7 +111,7 @@ func Run() error {
 		},
 		cli.StringFlag{
 			Name:  "redirect-uri",
-			Value: "http://127.0.0.1/code",
+			Value: "http://127.0.0.1:1323/auth_confirm",
 			Usage: "URI to receive authentication code of OAuth",
 		},
 		cli.StringFlag{
