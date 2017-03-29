@@ -44,10 +44,31 @@ func (c *Client) RefreshToken() error {
 	return nil
 }
 
+// LoadToken insert token string to client for next api request
+// If the token is in persistency format (as returned by
+// TokenToSave), it will be decrypted before being loaded.
 func (c *Client) LoadToken(token string) {
 	c.token = token
 }
 
 func (c *Client) HasToken() bool {
 	return c.token != ""
+}
+
+// TokenToSave returns a crypted token for persistent storage
+func (c *Client) TokenToSave() string {
+	return c.token
+}
+
+// SafeClone returns a new client with same client id, secret and redirect url,
+// but sensitive info such as user access token get cleared
+func (c *Client) SafeClone() *Client {
+	ret := &Client{
+		Credential: ClientCredential{
+			ClientID:     c.Credential.ClientID,
+			ClientSecret: c.Credential.ClientSecret,
+		},
+		RedirectUri: c.RedirectUri,
+	}
+	return ret
 }

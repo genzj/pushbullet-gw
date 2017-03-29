@@ -3,6 +3,7 @@ package server
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/genzj/pushbullet-gw/pushbullet"
+	"github.com/genzj/pushbullet-gw/storage"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -14,7 +15,8 @@ type register func(*echo.Echo)
 
 type pushbulletClientContext struct {
 	echo.Context
-	client *pushbullet.Client
+	client  *pushbullet.Client
+	backend storage.Backend
 }
 
 var ends []register
@@ -27,12 +29,12 @@ func newEcho(client *pushbullet.Client) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
-	// inject client instance
 	e.Use(func(h echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
+			// inject client instance by copy the passed in instance
 			cc := &pushbulletClientContext{
 				Context: c,
-				client:  client,
+				client:  client.SafeClone(),
 			}
 			return h(cc)
 		}
