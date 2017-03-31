@@ -41,6 +41,6 @@ func confirm(c echo.Context) error {
 		if _, err := cc.backend.IssueToken(user, cc.client.TokenToSave()); err != nil {
 			panic(err)
 		}
-		return c.Redirect(http.StatusTemporaryRedirect, "/welcome")
+		return c.Redirect(http.StatusTemporaryRedirect, "/welcome/"+user.SimplePushSecret)
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/genzj/pushbullet-gw/server"
+	"github.com/genzj/pushbullet-gw/storage"
 	"github.com/urfave/cli"
 )
 
@@ -19,7 +20,7 @@ func init() {
 				log.Error("Listen port is mandatory.")
 				return fmt.Errorf("Listen IP:port is mandatory, e.g. '127.0.0.1:1323' or ':1323'.")
 			}
-			server.Start(client, c.Args().Get(0))
+			server.Start(client, &storage.MemoryBackend{}, c.Args().Get(0))
 			return nil
 		},
 	})

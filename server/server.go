@@ -25,7 +25,7 @@ func registerEndpoint(end register) {
 	ends = append(ends, end)
 }
 
-func newEcho(client *pushbullet.Client) *echo.Echo {
+func newEcho(client *pushbullet.Client, backend storage.Backend) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -35,6 +35,7 @@ func newEcho(client *pushbullet.Client) *echo.Echo {
 			cc := &pushbulletClientContext{
 				Context: c,
 				client:  client.SafeClone(),
+				backend: backend,
 			}
 			return h(cc)
 		}
@@ -46,8 +47,8 @@ func newEcho(client *pushbullet.Client) *echo.Echo {
 	return e
 }
 
-func Start(client *pushbullet.Client, listen string) {
-	e := newEcho(client)
+func Start(client *pushbullet.Client, backend storage.Backend, listen string) {
+	e := newEcho(client, backend)
 	log.Info("listening on ", listen)
 	e.Logger.Fatal(e.Start(listen))
 }
