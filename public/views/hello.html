@@ -1,2 +1,4 @@
-{{define "hello"}}Hello, {{.}}!{{end}}
+{{define "hello"}}Hello, {{.Name}}! {{ template "devices" .Devices }}{{end}}
+
+{{define "devices"}}<ul>{{ range $_, $value := . }}<li>{{ $value.ID }}: {{ $value.Nickname }}</li>{{end}}</ul>{{end}}
 

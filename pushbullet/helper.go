@@ -56,7 +56,7 @@ func (c *Client) sendRequest(path string, body interface{}, result interface{}) 
 		log.Error(resp.String())
 		return nil, fmt.Errorf(resp.String())
 	} else {
-		log.Info(resp)
+		log.Debug(resp)
 		return resp, nil
 	}
 }

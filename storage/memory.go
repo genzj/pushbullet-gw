@@ -54,6 +54,7 @@ func (m *MemoryBackend) NewUser(user *User) (*User, error) {
 	newUser.SimplePushSecret = hashKey(newUser.SimplePushSecret)
 	newUser.AdminSecret = hashKey(newUser.AdminSecret)
 	(*m)[newUser.UserID] = newUser
+	fmt.Println("a", user, newUser)
 	return user, nil
 }
 
