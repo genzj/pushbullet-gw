@@ -24,7 +24,7 @@ func (m *MemoryBackend) GetByPushbulletID(pushbulletID string) (*User, error) {
 
 func (m *MemoryBackend) GetBySecret(secret string, isAdminSecret bool) (*User, error) {
 	for _, u := range *m {
-		if (isAdminSecret && u.AdminSecret == secret) || (!isAdminSecret && u.SimplePushSecret == secret) {
+		if (isAdminSecret && verifyKey(secret, u.AdminSecret)) || (!isAdminSecret && verifyKey(secret, u.SimplePushSecret)) {
 			return u, nil
 		}
 	}
@@ -32,14 +32,28 @@ func (m *MemoryBackend) GetBySecret(secret string, isAdminSecret bool) (*User, e
 }
 
 func (m *MemoryBackend) NewUser(user *User) (*User, error) {
+	detectSecret := func(key string) bool {
+		u, err := m.GetBySecret(key, false)
+		if u != nil && err == nil {
+			return true
+		}
+		u, err = m.GetBySecret(key, true)
+		if u != nil && err == nil {
+			return true
+		}
+		return false
+	}
 	if user.PushbulletID == "" {
 		panic("user pushbullet indent not fetched")
 	}
 	user.Tokens = make([]Token, 0)
 	user.UserID = user.PushbulletID
-	user.SimplePushSecret = user.UserID
-	user.AdminSecret = user.UserID
-	(*m)[user.UserID] = user
+	user.SimplePushSecret = uniqueSecret(8, detectSecret)
+	user.AdminSecret = uniqueSecret(8, detectSecret)
+	newUser := user.Clone()
+	newUser.SimplePushSecret = hashKey(newUser.SimplePushSecret)
+	newUser.AdminSecret = hashKey(newUser.AdminSecret)
+	(*m)[newUser.UserID] = newUser
 	return user, nil
 }
 

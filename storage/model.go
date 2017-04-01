@@ -18,3 +18,17 @@ type (
 		Tokens           []Token `json:"tokens"`
 	}
 )
+
+func (u User) Clone() *User {
+	return &User{
+		UserID:           u.UserID,
+		Name:             u.Name,
+		Email:            u.Email,
+		PushbulletID:     u.PushbulletID,
+		LastSeen:         u.LastSeen,
+		CreatedAt:        u.CreatedAt,
+		SimplePushSecret: u.SimplePushSecret,
+		AdminSecret:      u.AdminSecret,
+		Tokens:           u.Tokens,
+	}
+}
