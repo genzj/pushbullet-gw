@@ -4,7 +4,6 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -14,7 +13,7 @@ import (
 )
 
 const (
-	cookieUserPrefix string = "U_"
+	cookieName string = "U_Pushbullet"
 )
 
 var (
@@ -22,6 +21,7 @@ var (
 		[]byte("SecretlyLeaveItAl0ne"),
 		[]byte("AVerySeriousSecret!"),
 	}
+	errCookieNotSet = fmt.Errorf("Cookie not set")
 )
 
 type CookieBackend struct {
@@ -56,47 +56,11 @@ func (b CookieBackend) writeCookie(c echo.Context, name string, value interface{
 	return nil
 }
 
-func (b CookieBackend) iterDecodedCookie(c echo.Context, prefix string, do func(cookie *http.Cookie, user *User) (goon bool)) {
-	var dst User
-	for _, cookie := range c.Cookies() {
-		if prefix != "" && !strings.HasPrefix(cookie.Name, prefix) {
-			continue
-		}
-		if err := b.Decode(cookie.Name, cookie.Value, &dst); err != nil {
-			continue
-		} else {
-			fmt.Printf("iter %v, value %s\n", cookie.Name, dst)
-			if !do(cookie, &dst) {
-				break
-			}
-		}
-	}
-}
-
-func (b CookieBackend) foundFirstMatch(c echo.Context, matcher func(u *User) bool, err error) (*User, error) {
-	var u *User
-	do := func(cookie *http.Cookie, user *User) bool {
-		if matcher(user) {
-			u = user
-			return false
-		}
-		return true
-	}
-	b.iterDecodedCookie(c, cookieUserPrefix, do)
-	if u == nil {
-		return nil, err
-	} else {
-		return u, nil
-	}
-}
-
-func (b CookieBackend) userCookieName(userID string) string {
-	return cookieUserPrefix + userID
-}
-
 func (b CookieBackend) Get(c echo.Context, userID string) (*User, error) {
 	u := &User{}
-	if err := b.readCookie(c, b.userCookieName(userID), u); err != nil {
+	if userID != cookieName {
+		return nil, errIDNotFound
+	} else if err := b.readCookie(c, cookieName, u); err != nil {
 		return nil, errIDNotFound
 	} else {
 		return u, nil
@@ -104,27 +68,29 @@ func (b CookieBackend) Get(c echo.Context, userID string) (*User, error) {
 }
 
 func (b CookieBackend) GetByPushbulletID(c echo.Context, pushbulletID string) (*User, error) {
-	matcher := func(u *User) bool {
-		return u.PushbulletID == pushbulletID
+	u, err := b.Get(c, cookieName)
+	if err == nil && u.PushbulletID == pushbulletID {
+		return u, nil
 	}
-	return b.foundFirstMatch(c, matcher, errPushbulletIDNotFound)
+	return nil, errPushbulletIDNotFound
 }
 
 func (b CookieBackend) GetBySecret(c echo.Context, secret string, isAdminSecret bool) (*User, error) {
-	matcher := func(u *User) bool {
-		return (isAdminSecret && secret == u.AdminSecret) || (!isAdminSecret && secret == u.SimplePushSecret)
+	u, err := b.Get(c, cookieName)
+	if err == nil && ((isAdminSecret && secret == u.AdminSecret) || (!isAdminSecret && secret == u.SimplePushSecret)) {
+		return u, nil
 	}
-	return b.foundFirstMatch(c, matcher, errSecretNotFound)
+	return nil, errSecretNotFound
 }
 
 func (b CookieBackend) NewUser(c echo.Context, user *User) (*User, error) {
 	user.Tokens = make([]Token, 0)
-	user.UserID = safeSecret(8)
-	user.SimplePushSecret = safeSecret(8)
-	user.AdminSecret = safeSecret(8)
+	user.UserID = cookieName
+	user.SimplePushSecret = cookieName
+	user.AdminSecret = cookieName
 	user.CreatedAt = timestamp()
 	user.LastSeen = timestamp()
-	if err := b.writeCookie(c, b.userCookieName(user.UserID), user); err != nil {
+	if err := b.writeCookie(c, user.UserID, user); err != nil {
 		return user, err
 	}
 	return user, nil
@@ -134,7 +100,7 @@ func (b CookieBackend) IssueToken(c echo.Context, user *User, AccessToken string
 	user.Tokens = make([]Token, 1)
 	user.Tokens[0].AccessToken = AccessToken
 	user.Tokens[0].IssuedAt = timestamp()
-	if err := b.writeCookie(c, b.userCookieName(user.UserID), user); err != nil {
+	if err := b.writeCookie(c, user.UserID, user); err != nil {
 		return user, err
 	}
 	return user, nil
