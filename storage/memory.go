@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"fmt"
-
 	"github.com/labstack/echo"
 )
 
@@ -12,7 +10,7 @@ func (m *MemoryBackend) Get(c echo.Context, userID string) (*User, error) {
 	if u, ok := (*m)[userID]; ok {
 		return u, nil
 	} else {
-		return nil, fmt.Errorf("id not found")
+		return nil, errIDNotFound
 	}
 }
 
@@ -20,7 +18,7 @@ func (m *MemoryBackend) GetByPushbulletID(c echo.Context, pushbulletID string) (
 	if u, ok := (*m)[pushbulletID]; ok {
 		return u, nil
 	} else {
-		return nil, fmt.Errorf("id not found")
+		return nil, errPushbulletIDNotFound
 	}
 }
 
@@ -30,7 +28,7 @@ func (m *MemoryBackend) GetBySecret(c echo.Context, secret string, isAdminSecret
 			return u, nil
 		}
 	}
-	return nil, fmt.Errorf("secret not found")
+	return nil, errSecretNotFound
 }
 
 func (m *MemoryBackend) NewUser(c echo.Context, user *User) (*User, error) {

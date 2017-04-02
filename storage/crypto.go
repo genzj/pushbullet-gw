@@ -20,7 +20,7 @@ func safeRandom(dest []byte) {
 func safeSecret(len int) string {
 	bs := make([]byte, len/4*3+3)
 	safeRandom(bs)
-	return string(base64.StdEncoding.EncodeToString(bs)[:len])
+	return string(base64.URLEncoding.EncodeToString(bs)[:len])
 }
 
 func uniqueSecret(len int, judge func(secret string) bool) string {
