@@ -28,9 +28,9 @@ func confirm(c echo.Context) error {
 	if me, err := cc.client.GetUser(); err != nil {
 		panic(err.Error())
 	} else {
-		user, err := cc.backend.GetByPushbulletID(me.ID)
+		user, err := cc.backend.GetByPushbulletID(c, me.ID)
 		if err != nil {
-			if user, err = cc.backend.NewUser(&storage.User{
+			if user, err = cc.backend.NewUser(c, &storage.User{
 				PushbulletID: me.ID,
 				Name:         me.Name,
 				Email:        me.Email,
@@ -39,7 +39,7 @@ func confirm(c echo.Context) error {
 			}
 		}
 
-		if _, err = cc.backend.IssueToken(user, cc.client.TokenToSave()); err != nil {
+		if _, err = cc.backend.IssueToken(c, user, cc.client.TokenToSave()); err != nil {
 			panic(err)
 		}
 		fmt.Println("b", user)

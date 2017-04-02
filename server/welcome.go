@@ -20,7 +20,7 @@ func welcome(c echo.Context) error {
 	}
 	cc := c.(*pushbulletClientContext)
 	secret := c.Param("secret")
-	user, err := cc.backend.GetBySecret(secret, false)
+	user, err := cc.backend.GetBySecret(c, secret, false)
 	if err != nil {
 		return c.Render(http.StatusForbidden, "error", err.Error())
 	}

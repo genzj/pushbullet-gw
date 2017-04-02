@@ -2,11 +2,13 @@ package storage
 
 import (
 	"fmt"
+
+	"github.com/labstack/echo"
 )
 
 type MemoryBackend map[string]*User
 
-func (m *MemoryBackend) Get(userID string) (*User, error) {
+func (m *MemoryBackend) Get(c echo.Context, userID string) (*User, error) {
 	if u, ok := (*m)[userID]; ok {
 		return u, nil
 	} else {
@@ -14,7 +16,7 @@ func (m *MemoryBackend) Get(userID string) (*User, error) {
 	}
 }
 
-func (m *MemoryBackend) GetByPushbulletID(pushbulletID string) (*User, error) {
+func (m *MemoryBackend) GetByPushbulletID(c echo.Context, pushbulletID string) (*User, error) {
 	if u, ok := (*m)[pushbulletID]; ok {
 		return u, nil
 	} else {
@@ -22,22 +24,22 @@ func (m *MemoryBackend) GetByPushbulletID(pushbulletID string) (*User, error) {
 	}
 }
 
-func (m *MemoryBackend) GetBySecret(secret string, isAdminSecret bool) (*User, error) {
+func (m *MemoryBackend) GetBySecret(c echo.Context, secret string, isAdminSecret bool) (*User, error) {
 	for _, u := range *m {
-		if (isAdminSecret && verifyKey(secret, u.AdminSecret)) || (!isAdminSecret && verifyKey(secret, u.SimplePushSecret)) {
+		if (isAdminSecret && secret == u.AdminSecret) || (!isAdminSecret && secret == u.SimplePushSecret) {
 			return u, nil
 		}
 	}
 	return nil, fmt.Errorf("secret not found")
 }
 
-func (m *MemoryBackend) NewUser(user *User) (*User, error) {
+func (m *MemoryBackend) NewUser(c echo.Context, user *User) (*User, error) {
 	detectSecret := func(key string) bool {
-		u, err := m.GetBySecret(key, false)
+		u, err := m.GetBySecret(c, key, false)
 		if u != nil && err == nil {
 			return true
 		}
-		u, err = m.GetBySecret(key, true)
+		u, err = m.GetBySecret(c, key, true)
 		if u != nil && err == nil {
 			return true
 		}
@@ -50,16 +52,14 @@ func (m *MemoryBackend) NewUser(user *User) (*User, error) {
 	user.UserID = user.PushbulletID
 	user.SimplePushSecret = uniqueSecret(8, detectSecret)
 	user.AdminSecret = uniqueSecret(8, detectSecret)
-	newUser := user.Clone()
-	newUser.SimplePushSecret = hashKey(newUser.SimplePushSecret)
-	newUser.AdminSecret = hashKey(newUser.AdminSecret)
-	(*m)[newUser.UserID] = newUser
-	fmt.Println("a", user, newUser)
+	user.CreatedAt = timestamp()
+	user.LastSeen = timestamp()
+	(*m)[user.UserID] = user
 	return user, nil
 }
 
-func (m *MemoryBackend) IssueToken(user *User, AccessToken string) (*User, error) {
-	u, err := m.Get(user.UserID)
+func (m *MemoryBackend) IssueToken(c echo.Context, user *User, AccessToken string) (*User, error) {
+	u, err := m.Get(c, user.UserID)
 	if err != nil {
 		return u, err
 	}
@@ -69,6 +69,7 @@ func (m *MemoryBackend) IssueToken(user *User, AccessToken string) (*User, error
 	u.Tokens = make([]Token, 1)
 	u.Tokens[0] = Token{
 		AccessToken: AccessToken,
+		IssuedAt:    timestamp(),
 	}
 	return u, nil
 }

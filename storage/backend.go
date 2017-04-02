@@ -1,15 +1,17 @@
 package storage
 
+import "github.com/labstack/echo"
+
 type (
 	// Searcher defines persistent data getters
 	Searcher interface {
-		Get(userID string) (*User, error)
+		Get(c echo.Context, userID string) (*User, error)
 		// Get returns user instance by primary key, or error happen during query
 
-		GetByPushbulletID(pushbulletID string) (*User, error)
+		GetByPushbulletID(c echo.Context, pushbulletID string) (*User, error)
 		// GetByPushbulletID returns user with specified pushbullet user ident, or error if nothing found
 
-		GetBySecret(secret string, isAdminSecret bool) (*User, error)
+		GetBySecret(c echo.Context, secret string, isAdminSecret bool) (*User, error)
 		// GetBySecret returns user with specified simple push secret or admin
 		// secret according to isAdminSecret set or not
 
@@ -17,7 +19,7 @@ type (
 
 	// Keeper defines persistent data savers
 	Keeper interface {
-		NewUser(user *User) (*User, error)
+		NewUser(c echo.Context, user *User) (*User, error)
 		// NewUser saves a user into persistent storage.
 		// The pushbullet ID of specified user must be checked against duplication.
 		// The userID, SimplePushSecret, AdminSecret in input user instance
@@ -31,7 +33,7 @@ type (
 		// There is no guarantee that returned user is newly created, that is,
 		// incoming user instance may be modified in place.
 
-		IssueToken(user *User, AccessToken string) (*User, error)
+		IssueToken(c echo.Context, user *User, AccessToken string) (*User, error)
 		// IssueToken add a token to specified user, identified by user's
 		// primary key (UserID).
 		// Token's issue time field will be set to current system time if zero
