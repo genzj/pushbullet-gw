@@ -20,7 +20,8 @@ var t *Template
 func init() {
 	registerEndpoint(func(e *echo.Echo) {
 		t = &Template{
-			templates: template.Must(template.ParseGlob("public/views/*.html")),
+			// TODO embed template files with go.rice
+			templates: template.Must(template.ParseGlob("server/public/views/*.html")),
 		}
 		e.Renderer = t
 	})
